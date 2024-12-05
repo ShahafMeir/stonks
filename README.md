@@ -28,6 +28,16 @@ The script looks under the `/symbols` dir, you can find the `.json` files I'm tr
 
 Take a look at the `main.py` script to understand how the values are being fetched and stored. You can customize it to your needs to scrape more resources.
 
+To make GitHub Actions work in your forked repository:
+
+First, you'll need to enable GitHub Actions in your fork:
+Go to your repository's "Settings" tab
+Navigate to "Actions" under "Code and automation"
+Select "Allow all actions and reusable workflows"
+
+You'll need to set up GitHub Pages:
+In repository settings, go to "Pages"
+Under "Source", select "GitHub Actions"
 
 ### URLs
 Once your project is deployed on GitHub Pages, the symbol value can be accessed with the following convention:
