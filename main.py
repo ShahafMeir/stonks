@@ -66,7 +66,8 @@ def main():
                 symbol_price_date = datetime.datetime.strftime(symbol_price_date, '%Y-%m-%d')
 
             elif symbol_track_info['source'] == 'issa':
-                for _ in range(3):
+                for attempt in range(3):
+                    logging.info(f"Attempt {attempt + 1} for symbol {symbol}")
                     if symbol_price:
                         break
 
@@ -79,10 +80,12 @@ def main():
                     else:
                         url = f"https://maya.tase.co.il/fund/{symbol}"
 
+                    logging.info(f"Accessing URL: {url}")
                     driver.get(url)
                     driver.implicitly_wait(10)
                     for request in driver.requests:
                         if request.response:
+                            logging.info(f"Found request: {request.url}")
                             if request.url.startswith('https://mayaapi.tase.co.il/api/fund/details'):
                                 response = get_issa_rest_api_response(request)
                                 symbol_price = response['SellPrice'] / 100  # ILA -> ILS
