@@ -38,6 +38,16 @@ Select "Allow all actions and reusable workflows"
 You'll need to set up GitHub Pages:
 In repository settings, go to "Pages"
 Under "Source", select "GitHub Actions"
+To run the GitHub Actions workflow immediately without waiting for the scheduled time, you can trigger it manually through the GitHub interface:
+
+To run the action manually, go to your repository on GitHub
+Click on the "Actions" tab
+Select the "cron" workflow (or whatever name you gave it)
+Click the "Run workflow" button (it's a dropdown button on the right side)
+Click "Run workflow" in the dropdown menu
+
+Since we included workflow_dispatch in the workflow file, this manual trigger option is available. You can then watch the workflow run in real-time and see if there are any errors or if it completes successfully.
+The script will process all the JSON files in your symbols directory according to the code. Make sure your JSON files are properly formatted and in the right location before running the workflow.
 
 ### URLs
 Once your project is deployed on GitHub Pages, the symbol value can be accessed with the following convention:
