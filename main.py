@@ -86,17 +86,9 @@ def main():
                     for request in driver.requests:
                         if request.response:
                             logging.info(f"Found request: {request.url}")
-                            if request.url.startswith('https://mayaapi.tase.co.il/api/fund/details'):
+                            if request.url.startswith(url):
                                 response = get_issa_rest_api_response(request)
-                                symbol_price = response['SellPrice'] / 100  # ILA -> ILS
-                                symbol_price_date = response['RelevantDate']
-                                symbol_price_date = datetime.datetime.fromisoformat(symbol_price_date).strftime('%Y-%m-%d')
-
-                            if request.url.startswith('https://mayaapi.tase.co.il/api/foreignetf/tradedata'):
-                                response = get_issa_rest_api_response(request)
-                                symbol_price = response['LastRate'] / 100  # ILA -> ILS
-                                symbol_price_date = response['TradeDate']
-                                symbol_price_date = datetime.datetime.strptime(symbol_price_date, "%d/%m/%Y").strftime('%Y-%m-%d')
+                                logging.info(f"Found response: {response}")
 
             if not symbol_price:
                 raise Exception(f'Failed to get price for {symbol}')
