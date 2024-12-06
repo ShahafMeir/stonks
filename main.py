@@ -104,12 +104,16 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             
             # Clean the text step by step
             price_text = raw_text
-            price_text = price_text.replace(',', '')  # Remove commas first
-            price_text = price_text.replace('₪', '')  # Remove shekel symbol
-            price_text = price_text.replace('אג\'', '')  # Remove agorot symbol
-            price_text = price_text.strip()  # Remove any whitespace
-            
-            logging.debug(f"Cleaned price text: {price_text}")
+            # Remove Hebrew characters and special symbols first
+            price_text = ''.join(c for c in price_text if c.isdigit() or c == ',' or c == '.' or c.isspace())
+            # Remove commas
+            price_text = price_text.replace(',', '')
+            # Remove spaces
+            price_text = price_text.replace(' ', '')
+            # Final trim
+            price_text = price_text.strip()
+
+            logging.info(f"Cleaned price text: {price_text}")
             
             try:
                 if is_agorot:
