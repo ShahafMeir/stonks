@@ -66,14 +66,13 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             
             wait = WebDriverWait(driver, 20)
             
-            # Updated selectors list with the new class
             selectors = [
-                ".lastGateValue",  # New class
+                ".lastGateValue",
                 "[data-test='currPrice']",
                 ".security-price",
                 ".price-value",
                 "//span[contains(@class, 'price')]",
-                "//div[contains(@class, 'lastGateValue')]",  # Alternative XPath for new class
+                "//div[contains(@class, 'lastGateValue')]",
                 "//div[contains(text(), '₪')]"
             ]
             
@@ -96,14 +95,23 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             if not price_element:
                 raise Exception("Could not find price element with any selector")
             
-            # Updated price text cleaning to handle אג' (agorot) notation
-            price_text = price_element.text.strip()
-            price_text = price_text.replace('₪', '').replace(',', '').replace('אג\'', '').strip()
-            # Convert agorot to shekels if needed (divide by 100)
-            if 'אג' in price_element.text:
-                price = float(price_text) / 100
-            else:
-                price = float(price_text)
+            # Get the raw text first
+            raw_text = price_element.text.strip()
+            
+            # Check if we're dealing with agorot before cleaning the string
+            is_agorot = 'אג' in raw_text
+            
+            # Clean the text - remove all non-numeric characters except decimal point
+            price_text = raw_text.replace('₪', '').replace(',', '').replace('אג\'', '').strip()
+            
+            try:
+                if is_agorot:
+                    price = float(price_text) / 100
+                else:
+                    price = float(price_text)
+            except ValueError as e:
+                logging.error(f"Failed to parse price text: '{price_text}' (raw text: '{raw_text}')")
+                raise
             
             price_date = datetime.datetime.now().strftime('%Y-%m-%d')
             
