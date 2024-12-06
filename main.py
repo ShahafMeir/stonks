@@ -95,20 +95,29 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             if not price_element:
                 raise Exception("Could not find price element with any selector")
             
-            # Get the raw text first
+            # Get the raw text
             raw_text = price_element.text.strip()
+            logging.debug(f"Raw price text: {raw_text}")
             
-            # Check if we're dealing with agorot before cleaning the string
+            # Check if we're dealing with agorot
             is_agorot = 'אג' in raw_text
             
-            # Clean the text - remove all non-numeric characters except decimal point
-            price_text = raw_text.replace('₪', '').replace(',', '').replace('אג\'', '').strip()
+            # Clean the text step by step
+            price_text = raw_text
+            price_text = price_text.replace(',', '')  # Remove commas first
+            price_text = price_text.replace('₪', '')  # Remove shekel symbol
+            price_text = price_text.replace('אג\'', '')  # Remove agorot symbol
+            price_text = price_text.strip()  # Remove any whitespace
+            
+            logging.debug(f"Cleaned price text: {price_text}")
             
             try:
                 if is_agorot:
                     price = float(price_text) / 100
                 else:
                     price = float(price_text)
+                    
+                logging.info(f"Successfully parsed price: {price}")
             except ValueError as e:
                 logging.error(f"Failed to parse price text: '{price_text}' (raw text: '{raw_text}')")
                 raise
