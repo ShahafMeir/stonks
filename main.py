@@ -32,7 +32,7 @@ def get_latest_user_agent(operating_system='windows', browser='chrome'):
 
 def get_issa_etf_price(symbol, type='etf', max_attempts=3):
     """
-    Retrieves price from Maya TASE website with enhanced anti-detection measures.
+    Retrieves price from Maya TASE website with enhanced validation.
     """
     for attempt in range(max_attempts):
         logging.info(f"Attempt {attempt + 1} for symbol {symbol}")
@@ -44,82 +44,84 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             options.add_argument("--disable-gpu")
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
-            # Add additional options to avoid detection
             options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_argument("--disable-extensions")
             options.add_argument(f"--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
             
             driver = webdriver.Chrome(options=options)
-            driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'})
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
-            # Use the appropriate URL based on type
             if type == 'etf':
                 url = f"https://maya.tase.co.il/foreignetf/{symbol}"
             else:
                 url = f"https://maya.tase.co.il/fund/{symbol}"
                 
             logging.info(f"Accessing URL: {url}")
-            
-            # Add page load timeout
-            driver.set_page_load_timeout(30)
             driver.get(url)
             
-            # Wait for page to be fully loaded
-            driver.execute_script("return document.readyState") == "complete"
+            # Wait for the page to load
+            wait = WebDriverWait(driver, 20)
             
-            # Wait longer and try multiple selectors
-            wait = WebDriverWait(driver, 20)  # Increased timeout
+            # Wait for specific elements that indicate the page is fully loaded
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "securities-details")))
             
-            # Try multiple possible selectors
-            selectors = [
-                "[data-test='currPrice']",
-                ".security-price",
-                ".price-value",
-                "//span[contains(@class, 'price')]",  # XPath
-                "//div[contains(text(), '₪')]"  # XPath for price with shekel symbol
-            ]
+            # Let's log the full page source for debugging
+            logging.debug(f"Page source before price extraction: {driver.page_source}")
             
-            price_element = None
-            for selector in selectors:
+            # Try to get price from multiple sources
+            price = None
+            
+            # Method 1: Try getting from the main price display
+            try:
+                price_element = wait.until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, ".securityHeaderPrice"))
+                )
+                price_text = price_element.text.strip()
+                logging.info(f"Found price text (method 1): {price_text}")
+                if price_text:
+                    cleaned_price = price_text.replace('₪', '').replace(',', '').strip()
+                    price = float(cleaned_price)
+            except Exception as e:
+                logging.error(f"Method 1 failed: {str(e)}")
+            
+            # Method 2: Try getting from the trade data
+            if not price:
                 try:
-                    if selector.startswith("//"):
-                        price_element = wait.until(
-                            EC.presence_of_element_located((By.XPATH, selector))
-                        )
-                    else:
-                        price_element = wait.until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
-                        )
-                    if price_element:
-                        break
-                except:
-                    continue
+                    price_element = wait.until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, ".lastPrice"))
+                    )
+                    price_text = price_element.text.strip()
+                    logging.info(f"Found price text (method 2): {price_text}")
+                    if price_text:
+                        cleaned_price = price_text.replace('₪', '').replace(',', '').strip()
+                        price = float(cleaned_price)
+                except Exception as e:
+                    logging.error(f"Method 2 failed: {str(e)}")
             
-            if not price_element:
-                raise Exception("Could not find price element with any selector")
-            
-            # Clean up the price text
-            price_text = price_element.text.strip()
-            price_text = price_text.replace('₪', '').replace(',', '').strip()
-            price = float(price_text)
-            
-            price_date = datetime.datetime.now().strftime('%Y-%m-%d')
-            
-            driver.quit()
-            return price, price_date
+            # Validate the price
+            if price is not None:
+                if price <= 0 or price > 1000000:  # Adjust these bounds as needed
+                    raise Exception(f"Price {price} seems invalid")
+                
+                logging.info(f"Successfully extracted price: {price}")
+                
+                # Save screenshot for verification
+                screenshot_path = f"price_screenshot_{symbol}.png"
+                driver.save_screenshot(screenshot_path)
+                logging.info(f"Verification screenshot saved to {screenshot_path}")
+                
+                price_date = datetime.datetime.now().strftime('%Y-%m-%d')
+                driver.quit()
+                return price, price_date
+            else:
+                raise Exception("Could not extract price using any method")
             
         except Exception as e:
             logging.error(f"Attempt {attempt + 1} failed: {str(e)}")
             if driver:
                 try:
-                    # Save screenshot for debugging
                     screenshot_path = f"error_screenshot_{symbol}_{attempt}.png"
                     driver.save_screenshot(screenshot_path)
-                    logging.info(f"Screenshot saved to {screenshot_path}")
-                    
-                    # Log page source for debugging
-                    logging.debug(f"Page source: {driver.page_source}")
+                    logging.info(f"Error screenshot saved to {screenshot_path}")
+                    logging.debug(f"Page source on error: {driver.page_source}")
                 except:
                     pass
                 driver.quit()
@@ -127,7 +129,6 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             if attempt == max_attempts - 1:
                 raise Exception(f"Failed to get price after {max_attempts} attempts")
             
-            # Add increasing delay between attempts
             time.sleep((attempt + 1) * 5)
             continue
 
