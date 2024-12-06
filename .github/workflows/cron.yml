@@ -1,7 +1,7 @@
 name: cron
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *'  # Run every hour
   push:
     branches:
       - master
@@ -14,25 +14,29 @@ concurrency:
 jobs:
   cron:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This is important for gh-pages deployment
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+          
       - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r ./requirements.txt
-
+          
       - name: Run Sync
         run: |
           python3 main.py
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           cname: stonks.ShahafMeir.com
+          enable_jekyll: false
+          force_orphan: true
