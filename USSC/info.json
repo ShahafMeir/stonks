@@ -1,0 +1,9 @@
+{
+  "id": "USSC",
+  "type": "etf",
+  "source": "yahoo_finance",
+  "symbol": "USSC.L",
+  "currency": "USD",
+  "price": 73.6500015258789,
+  "price_date": "2024-12-09"
+}
