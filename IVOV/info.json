@@ -1,0 +1,9 @@
+{
+  "id": "IVOV",
+  "type": "etf",
+  "source": "yahoo_finance",
+  "symbol": "IVOV",
+  "currency": "USD",
+  "price": 101.62000274658203,
+  "price_date": "2024-12-12"
+}
