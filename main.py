@@ -68,6 +68,7 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             
             selectors = [
                 ".lastGateValue",
+                ".buyPriceValue",
                 "[data-test='currPrice']",
                 ".security-price",
                 ".price-value",
