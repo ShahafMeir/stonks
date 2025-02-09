@@ -39,7 +39,59 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
         driver = None
         
         try:
-            # ... [previous browser setup code remains the same] ...
+            options = Options()
+            options.add_argument("--headless=new")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-blink-features=AutomationControlled")
+            options.add_argument("--disable-extensions")
+            options.add_argument(f"--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+            
+            driver = webdriver.Chrome(options=options)
+            driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'})
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+            if type == 'etf':
+                url = f"https://maya.tase.co.il/foreignetf/{symbol}"
+            else:
+                url = f"https://maya.tase.co.il/fund/{symbol}"
+                
+            logging.info(f"Accessing URL: {url}")
+            
+            driver.set_page_load_timeout(30)
+            driver.get(url)
+            
+            driver.execute_script("return document.readyState") == "complete"
+            
+            wait = WebDriverWait(driver, 20)
+            
+            selectors = [
+                ".lastGateValue",
+                ".buyPriceValue",
+                "[data-test='currPrice']",
+                ".security-price",
+                ".price-value",
+                "//span[contains(@class, 'price')]",
+                "//div[contains(@class, 'lastGateValue')]",
+                "//div[contains(text(), '₪')]"
+            ]
+            
+            price_element = None
+            for selector in selectors:
+                try:
+                    if selector.startswith("//"):
+                        price_element = wait.until(
+                            EC.presence_of_element_located((By.XPATH, selector))
+                        )
+                    else:
+                        price_element = wait.until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+                        )
+                    if price_element:
+                        break
+                except:
+                    continue
             
             if not price_element:
                 raise Exception("Could not find price element with any selector")
