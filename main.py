@@ -136,11 +136,19 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 if not price_text:
                     raise ValueError(f"Could not extract numeric value from '{raw_text}'")
             
-            # Remove excess dots/commas
-            if price_text.count('.') > 1:
-                price_text = price_text.replace('.', '', price_text.count('.') - 1)
-            if price_text.count(',') > 1:
-                price_text = price_text.replace(',', '', price_text.count(',') - 1)
+            # Handle multiple dots/commas - keep only the last one
+            dot_count = price_text.count('.')
+            if dot_count > 1:
+                # Remove all dots first
+                price_text = price_text.replace('.', '')
+                # Find where the decimal should be (2 digits from the end)
+                if len(price_text) > 2:
+                    price_text = price_text[:-2] + '.' + price_text[-2:]
+                
+            comma_count = price_text.count(',')
+            if comma_count > 1:
+                # Remove all commas
+                price_text = price_text.replace(',', '')
             
             # Replace comma with dot if comma is present
             price_text = price_text.replace(',', '.')
@@ -190,7 +198,6 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             
             time.sleep((attempt + 1) * 5)
             continue
-
 
 def main():
     logging.info(f"Reading symbols *.json files in {SYMBOLS_DIR} ...")
