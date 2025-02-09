@@ -156,6 +156,7 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             logging.debug(f"Final cleaned price text: {price_text}")
             
             try:
+                logging.debug(f"Attempting to convert to float: {price_text}")
                 if is_agorot:
                     price = float(price_text) / 100
                 else:
@@ -198,6 +199,7 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             
             time.sleep((attempt + 1) * 5)
             continue
+
 
 def main():
     logging.info(f"Reading symbols *.json files in {SYMBOLS_DIR} ...")
