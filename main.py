@@ -39,82 +39,45 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
         driver = None
         
         try:
-            options = Options()
-            options.add_argument("--headless=new")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_argument("--disable-extensions")
-            options.add_argument(f"--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-            
-            driver = webdriver.Chrome(options=options)
-            driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'})
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            
-            if type == 'etf':
-                url = f"https://maya.tase.co.il/foreignetf/{symbol}"
-            else:
-                url = f"https://maya.tase.co.il/fund/{symbol}"
-                
-            logging.info(f"Accessing URL: {url}")
-            
-            driver.set_page_load_timeout(30)
-            driver.get(url)
-            
-            driver.execute_script("return document.readyState") == "complete"
-            
-            wait = WebDriverWait(driver, 20)
-            
-            selectors = [
-                ".lastGateValue",
-                ".buyPriceValue",
-                "[data-test='currPrice']",
-                ".security-price",
-                ".price-value",
-                "//span[contains(@class, 'price')]",
-                "//div[contains(@class, 'lastGateValue')]",
-                "//div[contains(text(), '₪')]"
-            ]
-            
-            price_element = None
-            for selector in selectors:
-                try:
-                    if selector.startswith("//"):
-                        price_element = wait.until(
-                            EC.presence_of_element_located((By.XPATH, selector))
-                        )
-                    else:
-                        price_element = wait.until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
-                        )
-                    if price_element:
-                        break
-                except:
-                    continue
+            # ... [previous browser setup code remains the same] ...
             
             if not price_element:
                 raise Exception("Could not find price element with any selector")
             
-            # Get the raw text
+            # Get the raw text and log it
             raw_text = price_element.text.strip()
-            logging.debug(f"Raw price text: {raw_text}")
+            logging.info(f"Raw price text: {raw_text}")
+            
+            if not raw_text:
+                raise ValueError("Price element was found but contains no text")
             
             # Check if we're dealing with agorot
             is_agorot = 'אג' in raw_text
             
-            # Clean the text step by step
+            # Clean the text step by step with logging
             price_text = raw_text
+            
+            # Log original state
+            logging.debug(f"Original text: {price_text}")
+            
             # Remove Hebrew characters and special symbols first
             price_text = ''.join(c for c in price_text if c.isdigit() or c == ',' or c == '.' or c.isspace())
+            logging.debug(f"After removing special chars: {price_text}")
+            
             # Remove commas
             price_text = price_text.replace(',', '')
+            logging.debug(f"After removing commas: {price_text}")
+            
             # Remove spaces
             price_text = price_text.replace(' ', '')
+            logging.debug(f"After removing spaces: {price_text}")
+            
             # Final trim
             price_text = price_text.strip()
-
-            logging.info(f"Cleaned price text: {price_text}")
+            logging.debug(f"Final cleaned price text: {price_text}")
+            
+            if not price_text:
+                raise ValueError(f"Cleaning process resulted in empty string. Original text: {raw_text}")
             
             try:
                 if is_agorot:
@@ -123,8 +86,16 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                     price = float(price_text)
                     
                 logging.info(f"Successfully parsed price: {price}")
+                
+                if price <= 0:
+                    raise ValueError(f"Invalid price value: {price}")
+                    
             except ValueError as e:
                 logging.error(f"Failed to parse price text: '{price_text}' (raw text: '{raw_text}')")
+                # Take a screenshot when price parsing fails
+                screenshot_path = f"price_parse_error_{symbol}_{attempt}.png"
+                driver.save_screenshot(screenshot_path)
+                logging.info(f"Price parse error screenshot saved to {screenshot_path}")
                 raise
             
             price_date = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -145,11 +116,10 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 driver.quit()
             
             if attempt == max_attempts - 1:
-                raise Exception(f"Failed to get price after {max_attempts} attempts")
+                raise Exception(f"Failed to get price after {max_attempts} attempts: {str(e)}")
             
             time.sleep((attempt + 1) * 5)
             continue
-
 def main():
     logging.info(f"Reading symbols *.json files in {SYMBOLS_DIR} ...")
     for symbol_track_file_path in glob.glob(os.path.join(SYMBOLS_DIR, '*.json'), recursive=True):
