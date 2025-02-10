@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-logging.getLogger("seleniumwire").setLevel(logging.DEBUG)
+logging.getLogger("seleniumwire").setLevel(logging.ERROR)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -152,7 +152,7 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
             # Join back with decimal point if it existed
             price_text = '.'.join(parts) if len(parts) > 1 else parts[0]
             
-            logging.debug(f"Final cleaned price text: {price_text}")
+            logging.info(f"Final cleaned price text: {price_text}")
             
             try:
                 logging.debug(f"Attempting to convert to float: {price_text}")
