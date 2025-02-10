@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-logging.getLogger("seleniumwire").setLevel(logging.ERROR)
+logging.getLogger("seleniumwire").setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -135,13 +135,6 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 
                 if not price_text:
                     raise ValueError(f"Could not extract numeric value from '{raw_text}'")
-            
-
-            # Remove all dots first
-            price_text = price_text.replace('.', '')
-                
-            # Remove all commas
-            price_text = price_text.replace(',', '')
 
             # Split by the last period (decimal point) if it exists
             parts = price_text.rsplit('.', 1)
