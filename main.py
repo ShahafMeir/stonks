@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-logging.getLogger("seleniumwire").setLevel(logging.ERROR)
+logging.getLogger("seleniumwire").setLevel(logging.DEBUG)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -142,15 +142,24 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 
             # Remove all commas
             price_text = price_text.replace(',', '')
+
+            # Split by the last period (decimal point) if it exists
+            parts = price_text.rsplit('.', 1)
+            
+            # Remove all commas and periods from the first part
+            parts[0] = parts[0].replace(',', '').replace('.', '')
+            
+            # Join back with decimal point if it existed
+            price_text = '.'.join(parts) if len(parts) > 1 else parts[0]
             
             logging.debug(f"Final cleaned price text: {price_text}")
             
             try:
                 logging.debug(f"Attempting to convert to float: {price_text}")
                 if is_agorot:
-                    price = float(price_text)
+                    price = float(price_text) / 100
                 else:
-                    price = float(price_text) * 100
+                    price = float(price_text)
                     
                 logging.info(f"Successfully parsed price: {price}")
                 
