@@ -85,11 +85,13 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 ".price-value",
                 ".fundDetailsLastPrice",  # Added fund-specific selector
                 ".etfDetailsLastPrice",   # Added ETF-specific selector
+                "div[class*='ticker'][class*='stocks_info_percent']",
                 "//span[contains(@class, 'price')]",
                 "//div[contains(@class, 'lastGateValue')]",
                 "//div[contains(text(), '₪')]",
                 "//span[contains(@class, 'fundPrice')]",  # Added fund-specific xpath
-                "//span[contains(@class, 'etfPrice')]"    # Added ETF-specific xpath
+                "//span[contains(@class, 'etfPrice')]",    # Added ETF-specific XPath
+                "//div[contains(@class, 'ticker') and contains(@class, 'stocks_info_percent')]"
             ]
             
             price_element = None
