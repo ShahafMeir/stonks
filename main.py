@@ -157,7 +157,7 @@ def get_issa_etf_price(symbol, type='etf', max_attempts=3):
                 #if is_agorot:
                 #    price = float(price_text) / 100
                 #else:
-                    price = float(price_text)
+                price = float(price_text)
                     
                 logging.info(f"Successfully parsed price: {price}")
                 
