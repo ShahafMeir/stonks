@@ -1,7 +1,7 @@
 name: cron
 on:
   schedule:
-    - cron: '0 * * * *'  # Run every hour
+    - cron: '0 0 * * 0'  # Run every hour
   push:
     branches:
       - master
