@@ -14,6 +14,12 @@ concurrency:
 jobs:
   cron:
     runs-on: ubuntu-latest
+    
+    # Add the environment here
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
     permissions:
       contents: read
       pages: write
@@ -41,4 +47,5 @@ jobs:
           path: ./dist
       
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
