@@ -1,7 +1,7 @@
 name: cron
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Run every hour
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight
   push:
     branches:
       - master
@@ -15,9 +15,10 @@ jobs:
   cron:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pages: write
       id-token: write
+      
     steps:
       - uses: actions/checkout@v4
       
@@ -33,13 +34,11 @@ jobs:
       - name: Run Sync
         run: |
           python3 main.py
-          
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          artifact_name: github-pages
-          
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
