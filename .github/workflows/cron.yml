@@ -15,7 +15,9 @@ jobs:
   cron:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This is important for gh-pages deployment
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       
