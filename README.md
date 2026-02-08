@@ -92,5 +92,3 @@ This is totally optional. I decided to set my GitHub pages deployment with a cus
 - From this: https://jossef.github.io/stonks/ZPRX/price
 - To this: https://stonks.jossef.com/ZPRX/price
 
-
-As I always like to say, if it looks stupid but it works, it ain't stupid.
